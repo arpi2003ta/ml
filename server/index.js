@@ -15,9 +15,10 @@ import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
 import questionRoute from "./routes/question.route.js";
 import responseRoutes from "./routes/response.route.js";
 import resultRoute from './routes/result.route.js';
-import examinerRoute from "./routes/examiner.route.js"
+import examinerRoute from './routes/examiner.route.js'
 import roadmapRoute from "./routes/roadmap.route.js";
 import searchRoute from "./routes/search.route.js";
+import predictorRoute from "./routes/predictor.route.js"
 dotenv.config();
 
 // Database connection
@@ -94,6 +95,7 @@ app.use("/api/v1/result", resultRoute);
 app.use("/api/v1/examiner",examinerRoute);
 app.use("/api/v1/roadmap", roadmapRoute);
 app.use("/api/v1/search", searchRoute);
+app.use("/api/v1/predict", predictorRoute);
 
 // ✅ Error handling middleware
 app.use((err, req, res, next) => {

@@ -38,6 +38,8 @@ import ResultsPage from "./pages/student/ResultsPage";
 import InstructorAIExaminer from "./pages/admin/InstructorAIExaminer";
 import { BrowserCompatibilityProvider } from "./components/BrowserCompatibility";
 import ErrorBoundary, { usePerformanceMonitoring, useNetworkStatus } from "./components/ErrorBoundary";
+import { CollegePredictor } from "./pages/student/CollegePredictor";
+import AIExaminerResult from "./pages/student/AIExaminerResult";
 
 const appRouter = createBrowserRouter([
   {
@@ -78,6 +80,14 @@ const appRouter = createBrowserRouter([
         ),
       },
       {
+        path:"AIExaminer-Result",
+        element: (
+          <ProtectedRoute>
+            <AIExaminerResult/>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "ai-roadmap",
         element: (
           <ProtectedRoute>
@@ -100,6 +110,14 @@ const appRouter = createBrowserRouter([
             <RoadmapHistory />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "college-predictor",
+        element: (
+          <ProtectedRoute>
+            <CollegePredictor/>
+          </ProtectedRoute>
+        )
       },
       {
         path: "admin/manage-exam",

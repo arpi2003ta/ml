@@ -56,6 +56,12 @@ const Navbar = () => {
       navigate('/ai-roadmap')
     }
   }
+
+  const handleCollegePredictorClick=()=>{
+    if(user?.role=='student'){
+      navigate('/college-predictor')
+    }
+  }
   
   /*const logoutHandler = async () => {
     try {
@@ -137,6 +143,10 @@ const Navbar = () => {
                       <DropdownMenuItem onClick={handlePersonalizedRoadmapClick}>
                         {" "}
                         Personalized Roadmap
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleCollegePredictorClick}>
+                        {" "}
+                        College Predictor
                       </DropdownMenuItem>
                   </>
                 )}
