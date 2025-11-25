@@ -1,7 +1,9 @@
+import { uploadMedia } from "../utils/cloudinary.js";
 import { Chat, Message } from "../models/chat.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
 import { emitSocketEvent } from "../utils/socket.js";
 import {User} from "../models/user.model.js";
+import { getLinkPreview as getLinkPreviewFromPackage } from "link-preview-js";
 
 export const sendMessage = async (req, res, next) => {
   try {
@@ -188,5 +190,106 @@ export const markAsRead = async (req, res) => {
       message: "Failed to mark messages as read",
       error: error.message,
     });
+  }
+};
+
+export const sendFileMessage = async (req, res, next) => {
+  try {
+    const { courseId, receiverId } = req.body;
+    const senderId = req.user._id;
+    const senderRole = req.user.role;
+
+    const sender = await User.findById(senderId);
+    if (!sender) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const purchase = await CoursePurchase.findOne({
+      userId: senderId,
+      courseId: courseId,
+      status: "completed",
+    });
+
+    if (!purchase && senderRole !== "instructor") {
+      return res.status(403).json({
+        success: false,
+        message: "Purchase the course to chat with the instructor",
+      });
+    }
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const myCloud = await uploadMedia(file);
+
+    let messageType;
+    if (file.mimetype.startsWith("image")) {
+      messageType = "image";
+    } else if (file.mimetype.startsWith("video")) {
+      messageType = "video";
+    } else if (file.mimetype.startsWith("audio")) {
+      messageType = "audio";
+    } else {
+      messageType = "file";
+    }
+
+    const newMessage = new Message({
+      sender: senderId,
+      receiver: receiverId,
+      course: courseId,
+      messageType,
+      fileUrl: myCloud.secure_url,
+      content: file.originalname,
+    });
+    await newMessage.save();
+
+    let chat = await Chat.findOne({
+      course: courseId,
+      $or: [
+        { student: senderId, instructor: receiverId },
+        { student: receiverId, instructor: senderId },
+      ],
+    });
+
+    if (!chat) {
+      chat = new Chat({
+        student: sender.role === "student" ? senderId : receiverId,
+        instructor: sender.role === "instructor" ? senderId : receiverId,
+        course: courseId,
+        messages: [newMessage._id],
+        lastMessage: newMessage._id,
+      });
+    } else {
+      chat.messages.push(newMessage._id);
+      chat.lastMessage = newMessage._id;
+      chat.updatedAt = Date.now();
+    }
+    await chat.save();
+
+    emitSocketEvent(req, receiverId.toString(), "newMessage", newMessage);
+    emitSocketEvent(req, senderId.toString(), "newMessage", newMessage);
+
+    res.status(201).json({
+      success: true,
+      message: "File sent successfully",
+      data: newMessage,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getLinkPreview = async (req, res, next) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ success: false, message: "URL is required" });
+    }
+    const preview = await getLinkPreviewFromPackage(url);
+    res.status(200).json({ success: true, data: preview });
+  } catch (error) {
+    next(error);
   }
 };

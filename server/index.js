@@ -49,6 +49,8 @@ io.on("connection", (socket) => {
   // Handle user registration
   socket.on("register", (userId) => {
     userSocketMap.set(userId, socket.id);
+    io.to(socket.id).emit("onlineUsers", Array.from(userSocketMap.keys()));
+    socket.broadcast.emit("online", userId);
     console.log(`User ${userId} connected with socket ID ${socket.id}`);
   });
 
@@ -57,15 +59,31 @@ io.on("connection", (socket) => {
     for (const [userId, socketId] of userSocketMap.entries()) {
       if (socketId === socket.id) {
         userSocketMap.delete(userId);
+        socket.broadcast.emit("offline", userId);
         console.log(`User ${userId} disconnected`);
         break;
       }
+    }
+  });
+
+  socket.on("typing", ({ receiverId }) => {
+    const socketId = userSocketMap.get(receiverId);
+    if (socketId) {
+      io.to(socketId).emit("typing");
+    }
+  });
+
+  socket.on("stop typing", ({ receiverId }) => {
+    const socketId = userSocketMap.get(receiverId);
+    if (socketId) {
+      io.to(socketId).emit("stop typing");
     }
   });
 });
 
 // Make io accessible in routes
 app.set("io", io);
+app.set("userSocketMap", userSocketMap);
 
 app.post(
   "/api/v1/purchase/webhook",

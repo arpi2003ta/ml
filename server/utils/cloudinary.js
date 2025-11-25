@@ -8,19 +8,12 @@ cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
 });
 
-/*export const uploadMedia = async (file) => {
-  try {
-    const uploadResponse = await cloudinary.uploader.upload(file, {
-      resource_type: "auto",
-    });
-    return uploadResponse;
-  } catch (error) {
-    console.log(error);
-  }
-};*/
 export const uploadMedia = async (file, isPdf = false) => {
   try {
-    const uploadResponse = await cloudinary.uploader.upload(file, {
+    const fileUri = `data:${file.mimetype};base64,${file.buffer.toString(
+      "base64"
+    )}`;
+    const uploadResponse = await cloudinary.uploader.upload(fileUri, {
       resource_type: isPdf ? "raw" : "auto",
       access_mode: "public",
     });
