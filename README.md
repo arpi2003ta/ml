@@ -1,1 +1,1 @@
-omr part, prediction , explore course -> left
+omr part, prediction , chat to be made just like whatapp, ui design , google authentication, password eye icon , report -> left
